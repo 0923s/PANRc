@@ -1,0 +1,8 @@
+rm(list = ls())
+library(maftools)
+library(mclust)
+
+mafdat_low<-read.maf(maf="C:\\Users\\low.txt")
+mafdat_high<-read.maf(maf="C:\\Users\\high.txt")
+genes = c("VHL","PBRM1","MUC4","TTN","SETD2","MUC16","BAP1","MTOR","KDM5C","HMCN1")
+coOncoplot(m1 = mafdat_high, m2 = mafdat_low, m1Name = 'High', m2Name = 'Low', genes = genes, removeNonMutated = TRUE)

@@ -1,0 +1,22 @@
+library(survival)		
+library(survminer)		
+inputFile="input.txt"        		     		
+var="MATN3"                  		
+		
+rt=read.table(inputFile, header=T, sep="\t", check.names=F)		
+rt=rt[,c("futime","fustat",var)]		
+colnames(rt)=c("futime","fustat","var")		
+		
+res.cut=surv_cutpoint(rt, time = "futime", event = "fustat",variables =c("var"))		
+res.cut		
+res.cat=surv_categorize(res.cut)		
+fit=survfit(Surv(futime, fustat) ~var, data = res.cat)		
+			
+diff=survdiff(Surv(futime, fustat) ~var,data =res.cat)		
+pValue=1-pchisq(diff$chisq,df=1)		
+if(pValue<0.001){		
+	pValue="p<0.001"	
+}else{		
+	pValue=paste0("p=",sprintf("%.03f",pValue))	
+}		
+		

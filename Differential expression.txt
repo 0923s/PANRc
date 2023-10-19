@@ -1,0 +1,33 @@
+library(limma)
+library(readr)
+library(ggplot2)
+library(pheatmap)
+library(ggsci)
+library(dplyr)
+
+group=sapply(strsplit(colnames(TCGA),"\\-"), "[", 4)
+group=sapply(strsplit(group,""),"[",1)
+group=gsub("6","1",group)
+grouplist=ifelse(as.numeric(group)==0,"tumor","normal")
+data=rbind(grouplist,TCGA)
+data=t(data)
+data=as.data.frame(data)
+Normaldata=data[data$grouplist=="normal",]
+Tumormaldata=data[data$grouplist=="tumor",]
+newdata1=rbind(Normaldata,Tumormaldata)
+newdata2=t(newdata1)
+newdata3=newdata2[-1,]
+data1<-apply(newdata3[,1:ncol(newdata3)],2,as.numeric)
+rownames(data1)<-rownames(newdata3)
+if(max(data1)>20) {
+  data1=log2(data1+1)
+}
+Type=c(rep("con",normal),rep("treat",tumor))
+design <- model.matrix(~0+factor(Type))
+colnames(design) <- c("con","treat")
+fit <-lmFit(data1,design)
+cont.matrix<-makeContrasts(treat-con,levels=design)
+fit2 <- contrasts.fit(fit, cont.matrix)
+fit2 <- eBayes(fit2)
+Diff=topTable(fit2,adjust='fdr',number=length(colnames(data)))
+

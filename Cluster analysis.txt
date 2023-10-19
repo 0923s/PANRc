@@ -1,0 +1,30 @@
+library(limma)
+library(ConsensusClusterPlus)
+
+maxK=9
+results=ConsensusClusterPlus(rt,
+              maxK=maxK,
+              reps=50,
+              pItem=0.8,
+              pFeature=1,
+              title=workDir,
+              clusterAlg="km",
+              distance="euclidean",
+              seed=123456,
+              plot="png")
+calcICL(results, title="consensusScore", plot="png")
+
+Kvec = 2:maxK
+x1 = 0.1; x2 = 0.9                    
+PAC = rep(NA,length(Kvec)) 
+names(PAC) = paste("K=",Kvec,sep="")          
+for(i in Kvec){
+  M = results[[i]]$consensusMatrix
+  Fn = ecdf(M[lower.tri(M)])
+  PAC[i-1] = Fn(x2) - Fn(x1)
+}                                 
+
+optK = Kvec[which.min(PAC)]
+
+clusterNum=optK        
+cluster=results[[clusterNum]][["consensusClass"]]

@@ -1,0 +1,23 @@
+library(openxlsx)
+library(stringr)
+library(clusterProfiler)
+library(ReactomePA)
+library(enrichplot)
+library(ggplot2)
+
+df = read.csv("KIRC.TN.csv",header=T)
+GO_database <- 'org.Hs.eg.db'
+KEGG_database <- 'hsa'
+df_id<-bitr(df$SYMBOL,fromType = 'SYMBOL',toType = 'ENTREZID',
+            OrgDb = GO_database)
+names(df) <- c('SYMBOL','logFC')
+df_all <- merge(df,df_id,by='SYMBOL',all=F)
+dim(df_all)
+df_all_sort<- df_all[order(df_all$logFC, decreasing=T),]
+gene_fc=df_all_sort$logFC
+names(gene_fc)<-df_all_sort$ENTREZID
+
+Go_Reactomeresult <- gsePathway(gene_fc,nPerm = 1000,  minGSSize = 10, maxGSSize = 1000, pvalueCutoff=0.05)
+write.table (Go_Reactomeresult, file ="Go_Reactomeresult.csv", sep =",", row.names =TRUE)
+paths<-c("R-HSA-1640170","R-HSA-1280215","R-HSA-168256","R-HSA-1280218","R-HSA-380108","R-HSA-198933")
+gseaplot2(Go_Reactomeresult,color=c('#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33'),paths,pvalue_table = FALSE)

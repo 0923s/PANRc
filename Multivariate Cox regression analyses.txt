@@ -1,0 +1,22 @@
+library(survival)
+library(openxlsx)
+library(plyr)
+library(forestplot)
+
+Baseline<-read.csv("cox.csv2")
+Baseline$futime=Baseline$futime/365
+BaSurv<-Surv(Baseline$futime,Baseline$fustat)
+fml<-as.formula(paste0("BaSurv~",paste0(UniVar$Chrarcteristics[UniVar$P_Value<0.05],
+                                        collapse = "+")))
+MultiCox<-coxph(fml,data=Baseline)
+MultiSum<-summary(MultiCox)
+MultiName<-as.character(UniVar$Chrarcteristics[UniVar$P_Value<0.05])
+MHR<-round(MultiSum$coefficients[,2],3)
+MPV<-round(MultiSum$coefficients[,5],3)
+MCIL<-round(MultiSum$conf.int[,3],3)
+MCIU<-round(MultiSum$conf.int[,4],3)
+MultiCox<-data.frame("Chrarcteristics"=MultiName,
+                     "M_Hazard.Ratio"=MHR,
+                     "MCI95_L"=MCIL,
+                     "MCI95_U"=MCIU,
+                     "M_P_Value"=MPV)

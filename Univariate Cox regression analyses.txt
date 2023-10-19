@@ -1,0 +1,26 @@
+library(survival)
+library(openxlsx)
+library(plyr)
+library(forestplot)
+
+Baseline<-read.csv("cox.csv")
+Baseline$futime=Baseline$futime/365
+BaSurv<-Surv(Baseline$futime,Baseline$fustat)
+UniCox<-function(x){
+  FML<-as.formula(paste0("BaSurv~",x))
+  GCox<-coxph(FML,data=Baseline)
+  GSum<-summary(GCox)
+  HR<-round(GSum$coefficients[,2],3)
+  PValue<-round(GSum$coefficients[,5],3)
+  CIL<-round(GSum$conf.int[,3],3)
+  CIU<-round(GSum$conf.int[,4],3)
+  Unicox<-data.frame("Chrarcteristics"=x,
+                     "U_Hazard.Ratio"=HR,
+                     "UCI95_L"=CIL,
+                     "UCI95_U"=CIU,
+                     "P_Value"=PValue)
+  return(Unicox)
+}
+VarNames<-colnames(Baseline)[c(1:(ncol(Baseline)-2))]
+UniVar<-lapply(VarNames,UniCox)
+UniVar<-ldply(UniVar,data.frame)

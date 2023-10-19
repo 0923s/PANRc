@@ -1,0 +1,46 @@
+library(limma)  
+library(e1071)
+library(ggplot2)
+library(CIBERSORT)
+library(pheatmap)
+exp <- read.csv("123.csv",header=T,check.names=F)
+rt=as.matrix(exp)
+rownames(rt)=rt[,1]
+exp=rt[,2:ncol(rt)]
+dimnames=list(rownames(exp),colnames(exp))
+data=matrix(as.numeric(as.matrix(exp)),nrow = nrow(exp),dimnames=dimnames)
+data=avereps(data)
+data=data[rowMeans(data)>1,]
+write.table(data,"123.txt",quote = F,sep="\t")
+results<-cibersort("LM22.txt","123.txt",perm = 1, QN = TRUE)
+
+rowscale <- results[,1:ncol(LM22)]
+rowscale <- rowscale[,apply(rowscale, 2, function(x){sum(x)>0})]
+
+pheatmap(rowscale,
+         scale = 'row',
+         cluster_col=T,
+         cluster_row=F,
+         angle_col = "315")
+pheatmap(rowscale,
+         scale = 'column',
+         cluster_col=F,
+         cluster_row=T,
+         angle_col = "315")
+
+my36colors <-c("#8DD3C7","#FFFFB3","#BEBADA","#FB8072","#80B1D3","#FDB462","#B3DE69","#FCCDE5","#D9D9D9","#BC80BD",
+               "#FFED6F","#A6CEE3","#1F78B4","#B2DF8A","#33A02C","#FB9A99","#543005","#8C510A","#BF812D","#DFC27D",
+               "#F6E8C3","#F5F5F5","#C7EAE5","#80CDC1","#35978F","#01665E","#003C30","#F2F2F2","#FDDAEC","#E5D8BD",
+               "#FFFFCC","#FED9A6","#DECBE4","#FDD49E","#F2F2F2","#FFD92F")
+cell.prop<- apply(rowscale, 1, function(x){x/sum(x)})
+data4plot <- data.frame()
+for (i in 1:ncol(cell.prop)) {
+  data4plot <- rbind(
+    data4plot,
+    cbind(cell.prop[,i],rownames(cell.prop),
+          rep(colnames(cell.prop)[i],nrow(cell.prop)
+          )
+    )
+  )}
+colnames(data4plot)<-c('proportion','celltype','sample')
+data4plot$proportion <- as.numeric(data4plot$proportion)
